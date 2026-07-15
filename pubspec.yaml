@@ -1,0 +1,81 @@
+name: musix
+description: "Musix — Feel Every Beat. A modern music player."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI & Icons
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+
+  # Material Design 3 & Dynamic Color
+  dynamic_color: ^1.7.0
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Router
+  go_router: ^14.8.1
+
+  # Database
+  drift: ^2.23.1
+  sqlite3_flutter_libs: ^0.5.30
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+  # Audio
+  just_audio: ^0.9.43
+  audio_service: ^0.18.17
+
+  # Network
+  dio: ^5.7.0
+
+  # Image & Color
+  cached_network_image: ^3.4.1
+  palette_generator: ^0.3.3+4
+
+  # Animation
+  flutter_animate: ^4.5.2
+
+  # Code Generation (runtime)
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # Utilities
+  intl: ^0.19.0
+  uuid: ^4.5.1
+  permission_handler: ^11.3.1
+  share_plus: ^10.1.4
+  url_launcher: ^6.3.1
+  package_info_plus: ^8.2.1
+  flutter_slidable: ^3.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+  # Code Generation
+  build_runner: ^2.4.14
+  drift_dev: ^2.23.1
+  freezed: ^2.5.8
+  json_serializable: ^6.9.3
+  riverpod_generator: ^2.6.3
+
+  # Testing
+  mocktail: ^1.0.4
+  golden_toolkit: ^0.15.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - json/musics.json
