@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class GenresSection extends StatelessWidget {
   const GenresSection({super.key, required this.genres});
@@ -13,12 +14,7 @@ class GenresSection extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-          child: Text(
-            'Genres',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          child: Text('Genres', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
         ),
         SizedBox(
           height: 40,
@@ -36,19 +32,16 @@ class GenresSection extends StatelessWidget {
                 theme.colorScheme.primaryContainer,
                 theme.colorScheme.secondaryContainer,
               ];
-
-              return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: colors[index % colors.length],
-                ),
-                child: Text(
-                  genres[index],
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.onPrimaryContainer,
+              return GestureDetector(
+                onTap: () => context.go('/search'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: colors[index % colors.length],
                   ),
+                  child: Text(genres[index],
+                    style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onPrimaryContainer)),
                 ),
               );
             },

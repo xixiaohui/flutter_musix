@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/album_art_helper.dart';
 import '../providers/playback_state_provider.dart';
 
+/// A rotating album art that spins during playback.
+/// Uses picsum fallback based on current song for unique visuals.
 class AlbumArtRotating extends ConsumerStatefulWidget {
   const AlbumArtRotating({super.key});
 
@@ -17,10 +20,7 @@ class _AlbumArtRotatingState extends ConsumerState<AlbumArtRotating>
   @override
   void initState() {
     super.initState();
-    _anim = AnimationController(
-      duration: const Duration(seconds: 20),
-      vsync: this,
-    );
+    _anim = AnimationController(duration: const Duration(seconds: 20), vsync: this);
   }
 
   @override
@@ -32,13 +32,18 @@ class _AlbumArtRotatingState extends ConsumerState<AlbumArtRotating>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isPlaying = ref.watch(playbackControllerProvider).isPlaying;
+    final state = ref.watch(playbackControllerProvider);
+    final isPlaying = state.isPlaying;
 
     if (isPlaying) {
       if (!_anim.isAnimating) _anim.repeat();
     } else {
       _anim.stop();
     }
+
+    final coverUrl = state.currentSong != null
+        ? AlbumArtHelper.songCover(state.currentSong!.title, state.currentSong!.author, w: 400, h: 400)
+        : null;
 
     return AspectRatio(
       aspectRatio: 1,
@@ -51,32 +56,60 @@ class _AlbumArtRotatingState extends ConsumerState<AlbumArtRotating>
         child: Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.primaryContainer,
-                theme.colorScheme.tertiaryContainer,
-                theme.colorScheme.secondaryContainer,
-              ],
-            ),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                blurRadius: 60, spreadRadius: 8,
+                color: theme.colorScheme.primary.withValues(alpha: 0.35),
+                blurRadius: 80, spreadRadius: 12,
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-              ),
-              child: Center(
-                child: Icon(Icons.music_note_rounded, size: 80,
-                  color: theme.colorScheme.onPrimaryContainer),
-              ),
-            ),
+          child: ClipOval(
+            child: coverUrl != null
+                ? Image.network(coverUrl, fit: BoxFit.cover,
+                    cacheWidth: 400, cacheHeight: 400,
+                    errorBuilder: (_, __, ___) => Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(colors: [
+                          theme.colorScheme.primaryContainer,
+                          theme.colorScheme.tertiaryContainer,
+                        ]),
+                      ),
+                      child: Icon(Icons.music_note_rounded, size: 80,
+                        color: theme.colorScheme.onPrimaryContainer),
+                    ),
+                    loadingBuilder: (_, child, progress) {
+                      if (progress == null) return child;
+                      return Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(colors: [
+                            theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+                            theme.colorScheme.tertiaryContainer.withValues(alpha: 0.5),
+                          ]),
+                        ),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: progress.expectedTotalBytes != null
+                                ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                                : null,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      );
+                    },
+                  )
+                : Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(colors: [
+                        theme.colorScheme.primaryContainer,
+                        theme.colorScheme.tertiaryContainer,
+                      ]),
+                    ),
+                    child: Icon(Icons.music_note_rounded, size: 80,
+                      color: theme.colorScheme.onPrimaryContainer),
+                  ),
           ),
         ),
       ),

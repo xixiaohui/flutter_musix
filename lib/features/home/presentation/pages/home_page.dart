@@ -57,25 +57,25 @@ class HomePage extends ConsumerWidget {
                 if (state.recentlyPlayed.isNotEmpty)
                   RecentlyPlayedSection(
                     entries: state.recentlyPlayed,
-                    onPlay: (song, all, index) => playbackController.playList(all, startIndex: index),
+                    onPlay: (song, all, index) => playbackController.playSong(song, allSongs: all),
                   ),
                 if (state.continueListening.isNotEmpty)
                   ContinueListeningCard(
                     entries: state.continueListening,
-                    onPlay: (song, all, index) => playbackController.playList(all, startIndex: index),
+                    onPlay: (song, all, index) => playbackController.playSong(song, allSongs: all),
                   ),
                 if (state.trending.isNotEmpty)
                   TrendingSection(
                     entries: state.trending,
-                    onPlay: (song, all, index) => playbackController.playList(all, startIndex: index),
+                    onPlay: (song, all, index) => playbackController.playSong(song, allSongs: all),
                   ),
                 if (state.recommended.isNotEmpty)
                   RecommendedSection(
                     entries: state.recommended,
-                    onPlay: (song, all, index) => playbackController.playList(all, startIndex: index),
+                    onPlay: (song, all, index) => playbackController.playSong(song, allSongs: all),
                   ),
                 if (state.albums.isNotEmpty)
-                  AlbumsSection(entries: state.albums, onPlay: (song) => playbackController.playSong(song)),
+                  AlbumsSection(entries: state.albums, onPlay: (song) => playbackController.playSong(song, allSongs: state.albums)),
                 if (state.artists.isNotEmpty)
                   ArtistsSection(entries: state.artists),
                 if (state.genres.isNotEmpty)

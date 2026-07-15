@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../core/utils/album_art_helper.dart';
+
 /// A reusable album/song cover art widget with Hero support.
 ///
-/// Supports placeholder, error fallback, and Hero animation tag.
+/// Falls back to picsum.photos for placeholder images instead of grey boxes.
 class CoverArt extends StatelessWidget {
   const CoverArt({
     super.key,
@@ -11,6 +13,7 @@ class CoverArt extends StatelessWidget {
     this.borderRadius = 8,
     this.heroTag,
     this.fit = BoxFit.cover,
+    this.fallbackSeed,
   });
 
   final String? url;
@@ -18,62 +21,56 @@ class CoverArt extends StatelessWidget {
   final double borderRadius;
   final String? heroTag;
   final BoxFit fit;
+  /// Seed for picsum fallback — generates a unique stable image.
+  final String? fallbackSeed;
 
   @override
   Widget build(BuildContext context) {
-    final image = _buildImage();
+    final imageUrl = (url != null && url!.isNotEmpty)
+        ? url!
+        : fallbackSeed != null
+            ? AlbumArtHelper.generic(fallbackSeed!, w: size.round(), h: size.round())
+            : null;
 
-    if (heroTag != null) {
-      return Hero(
-        tag: heroTag!,
-        child: Material(
-          color: Colors.transparent,
-          child: image,
-        ),
-      );
-    }
-
-    return image;
-  }
-
-  Widget _buildImage() {
-    if (url == null || url!.isEmpty) {
-      return _buildPlaceholder();
-    }
-
-    return SizedBox(
+    final image = SizedBox(
       width: size,
       height: size,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: url!.startsWith('http')
+        child: imageUrl != null
             ? Image.network(
-                url!,
+                imageUrl,
                 fit: fit,
                 errorBuilder: (_, __, ___) => _buildPlaceholder(),
                 loadingBuilder: (_, child, progress) {
                   if (progress == null) return child;
                   return _buildPlaceholder();
                 },
+                cacheWidth: size.round(),
+                cacheHeight: size.round(),
               )
-            : Image.asset(
-                url!,
-                fit: fit,
-                errorBuilder: (_, __, ___) => _buildPlaceholder(),
-              ),
+            : _buildPlaceholder(),
       ),
     );
+
+    if (heroTag != null) {
+      return Hero(tag: heroTag!, child: Material(color: Colors.transparent, child: image));
+    }
+    return image;
   }
 
   Widget _buildPlaceholder() {
     return Container(
-      width: size,
-      height: size,
+      width: size, height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
-        color: Colors.grey.withValues(alpha: 0.2),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2D2D3A), Color(0xFF1C1C26)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-      child: const Icon(Icons.music_note, color: Colors.grey),
+      child: const Icon(Icons.music_note, color: Color(0xFF555566), size: 24),
     );
   }
 }

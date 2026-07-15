@@ -15,21 +15,16 @@ android {
 
     defaultConfig {
         applicationId = "com.xxh.melodify"
-        minSdk = 21
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
-        // Performance optimizations
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            // Release signing — replace with your own keystore
+            // TODO: Add release keystore for production
             signingConfig = signingConfigs.getByName("debug")
-
-            // Code shrinking & obfuscation
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -39,12 +34,10 @@ android {
         }
     }
 
-    // Enable build features
     buildFeatures {
         buildConfig = true
     }
 
-    // Packaging options
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -63,6 +56,5 @@ flutter {
 }
 
 dependencies {
-    // AndroidX Media for audio_service
     implementation("androidx.media:media:1.7.0")
 }

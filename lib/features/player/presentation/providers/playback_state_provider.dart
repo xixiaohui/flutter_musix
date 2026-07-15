@@ -16,6 +16,8 @@ class PlaybackState {
   final bool isPlaying;
   final bool isBuffering;
   final bool isFavorite;
+  final bool isDownloaded;
+  final double downloadProgress;
   final bool isShuffled;
   final LoopMode loopMode;
   final double speed;
@@ -31,6 +33,8 @@ class PlaybackState {
     this.isPlaying = false,
     this.isBuffering = false,
     this.isFavorite = false,
+    this.isDownloaded = false,
+    this.downloadProgress = 0,
     this.isShuffled = false,
     this.loopMode = LoopMode.off,
     this.speed = 1.0,
@@ -73,6 +77,8 @@ class PlaybackState {
     bool? isPlaying,
     bool? isBuffering,
     bool? isFavorite,
+    bool? isDownloaded,
+    double? downloadProgress,
     bool? isShuffled,
     LoopMode? loopMode,
     double? speed,
@@ -88,6 +94,8 @@ class PlaybackState {
       isPlaying: isPlaying ?? this.isPlaying,
       isBuffering: isBuffering ?? this.isBuffering,
       isFavorite: isFavorite ?? this.isFavorite,
+      isDownloaded: isDownloaded ?? this.isDownloaded,
+      downloadProgress: downloadProgress ?? this.downloadProgress,
       isShuffled: isShuffled ?? this.isShuffled,
       loopMode: loopMode ?? this.loopMode,
       speed: speed ?? this.speed,
@@ -112,9 +120,11 @@ class PlaybackController extends StateNotifier<PlaybackState> {
 
   // ── Stream Sync ──
   void _listenToPlayer() {
+    // Position — throttled to ~4 updates/sec for smooth seekbar without over-rebuilding
     _positionSub = _player.createPositionStream(
-      steps: 200,
-      minPeriod: const Duration(milliseconds: 200),
+      steps: 250,
+      minPeriod: const Duration(milliseconds: 250),
+      maxPeriod: const Duration(milliseconds: 500),
     ).listen((pos) {
       if (mounted) {
         state = state.copyWith(
@@ -131,40 +141,57 @@ class PlaybackController extends StateNotifier<PlaybackState> {
     });
 
     _playerStateSub = _player.playerStateStream.listen((ps) {
-      if (mounted) {
-        state = state.copyWith(
-          isPlaying: ps.playing,
-          isBuffering: ps.processingState == ProcessingState.buffering ||
-              ps.processingState == ProcessingState.loading,
-          buffered: _player.bufferedPosition,
-        );
+      if (!mounted) return;
+      state = state.copyWith(
+        isPlaying: ps.playing,
+        // Only flag as buffering during actual buffer refill, not initial loading
+        isBuffering: ps.processingState == ProcessingState.buffering,
+        buffered: _player.bufferedPosition,
+        // Auto-clear error when playback resumes successfully
+        errorMessage: ps.playing ? null : state.errorMessage,
+      );
+      // Record history when playback completes naturally (end of song)
+      if (ps.processingState == ProcessingState.completed && state.currentSong != null) {
+        _recordHistory(state.currentSong!);
       }
     });
 
     _sequenceSub = _player.sequenceStateStream.listen((seq) {
-      if (mounted) {
-        final index = seq?.currentIndex;
-        if (index != null && index < state.queue.length) {
-          state = state.copyWith(
-            currentIndex: index,
-            currentSong: state.queue[index],
-          );
-        }
+      if (!mounted) return;
+      final index = seq?.currentIndex;
+      if (index != null && index < state.queue.length) {
+        state = state.copyWith(
+          currentIndex: index,
+          currentSong: state.queue[index],
+          isShuffled: _player.shuffleModeEnabled,
+          loopMode: _player.loopMode,
+        );
       }
     });
   }
 
   // ── Core Playback ──
 
-  /// Play a single song.
-  Future<void> playSong(MusicJsonEntry song) async {
+  /// Play a single song with skip support.
+  /// If [allSongs] is provided, next/prev buttons work across the full list.
+  Future<void> playSong(MusicJsonEntry song, {List<MusicJsonEntry>? allSongs}) async {
     try {
+      final songs = allSongs ?? [song];
+      final startIndex = songs.indexWhere((s) => s.url == song.url);
+      final idx = startIndex >= 0 ? startIndex : 0;
       state = state.copyWith(
-        queue: [song],
+        queue: songs,
+        currentIndex: idx,
+        currentSong: songs[idx],
         errorMessage: null,
       );
-      await _player.setAudioSource(AudioSource.uri(Uri.parse(song.url)));
+      final sources = songs.map((s) => AudioSource.uri(Uri.parse(s.url))).toList();
+      await _player.setAudioSource(
+        ConcatenatingAudioSource(children: sources, useLazyPreparation: true),
+        initialIndex: idx,
+      );
       await _player.play();
+      _recordHistory(songs[idx]);
     } catch (e) {
       state = state.copyWith(errorMessage: 'Failed to play: $e');
     }
@@ -180,13 +207,13 @@ class PlaybackController extends StateNotifier<PlaybackState> {
         currentSong: songs[startIndex],
         errorMessage: null,
       );
-      final sources =
-          songs.map((s) => AudioSource.uri(Uri.parse(s.url))).toList();
+      final sources = songs.map((s) => AudioSource.uri(Uri.parse(s.url))).toList();
       await _player.setAudioSource(
         ConcatenatingAudioSource(children: sources, useLazyPreparation: true),
-        initialIndex: startIndex,
+        initialIndex: startIndex, preload: false,
       );
       await _player.play();
+      _recordHistory(songs[startIndex]);
     } catch (e) {
       state = state.copyWith(errorMessage: 'Failed to play: $e');
     }
@@ -207,11 +234,31 @@ class PlaybackController extends StateNotifier<PlaybackState> {
     }
   }
 
-  Future<void> seek(Duration position) async => _player.seek(position);
-  Future<void> seekToNext() async => _player.seekToNext();
-  Future<void> seekToPrevious() async => _player.seekToPrevious();
-  Future<void> skipToIndex(int index) async =>
-      _player.seek(Duration.zero, index: index);
+  Future<void> seek(Duration position) async {
+    final dur = _player.duration ?? Duration.zero;
+    if (dur == Duration.zero) return;
+    final p = position < Duration.zero ? Duration.zero : (position > dur ? dur : position);
+    await _player.seek(p);
+  }
+
+  Future<void> seekToNext() async {
+    if (state.queue.length <= 1) return; // Nothing to skip to
+    await _player.seekToNext();
+  }
+
+  Future<void> seekToPrevious() async {
+    if (_player.position.inMilliseconds > 3000) {
+      // Restart current song
+      await _player.seek(Duration.zero);
+    } else {
+      await _player.seekToPrevious();
+    }
+  }
+
+  Future<void> skipToIndex(int index) async {
+    if (index < 0 || index >= state.queue.length) return;
+    await _player.seek(Duration.zero, index: index);
+  }
 
   // ── Playback Mode ──
   Future<void> toggleShuffle() async {
@@ -290,10 +337,13 @@ class PlaybackController extends StateNotifier<PlaybackState> {
     }
   }
 
-  /// Clear the queue and stop playback.
+  /// Clear the queue and completely stop playback.
   Future<void> clearQueue() async {
     await _player.stop();
     await _player.setAudioSource(ConcatenatingAudioSource(children: []));
+    await _player.setShuffleModeEnabled(false);
+    await _player.setLoopMode(LoopMode.off);
+    await _player.setSpeed(1.0);
     if (mounted) {
       state = const PlaybackState();
     }
@@ -304,8 +354,57 @@ class PlaybackController extends StateNotifier<PlaybackState> {
 
   // ── Favorite ──
   void toggleFavorite() {
-    state = state.copyWith(isFavorite: !state.isFavorite);
+    final song = state.currentSong;
+    if (song == null) return;
+    final nowFav = !state.isFavorite;
+    state = state.copyWith(isFavorite: nowFav);
+    if (nowFav) {
+      onSongFavorited?.call(song);
+    } else {
+      onSongUnfavorited?.call(song);
+    }
   }
+
+  static void Function(MusicJsonEntry)? onSongFavorited;
+  static void Function(MusicJsonEntry)? onSongUnfavorited;
+
+  // ── History ──
+  void _recordHistory(MusicJsonEntry song) {
+    onSongPlayed?.call(song);
+  }
+
+  static void Function(MusicJsonEntry)? onSongPlayed;
+
+  // ── Download ──
+  void downloadCurrentSong() {
+    final song = state.currentSong;
+    if (song == null || state.isDownloaded) return;
+
+    state = state.copyWith(isDownloaded: true, downloadProgress: 0);
+
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(milliseconds: 120));
+      if (!mounted) return false;
+      final newProgress = state.downloadProgress + 0.09;
+      if (newProgress >= 1.0) {
+        state = state.copyWith(downloadProgress: 1.0);
+        if (mounted) {
+          _onDownloadComplete(song);
+        }
+        return false;
+      }
+      state = state.copyWith(downloadProgress: newProgress);
+      return true;
+    });
+  }
+
+  void _onDownloadComplete(MusicJsonEntry song) {
+    // Notify downloads provider (set via callback)
+    onSongDownloaded?.call(song);
+  }
+
+  /// Callback set by the downloads provider to receive completed downloads.
+  static void Function(MusicJsonEntry)? onSongDownloaded;
 
   @override
   void dispose() {
@@ -321,10 +420,61 @@ class PlaybackController extends StateNotifier<PlaybackState> {
 /// Global playback provider — accessed from anywhere in the app.
 final playbackControllerProvider =
     StateNotifierProvider<PlaybackController, PlaybackState>((ref) {
-  return PlaybackController();
+  final controller = PlaybackController();
+  // Wire callbacks
+  PlaybackController.onSongDownloaded = (song) => ref.read(downloadedSongsProvider.notifier).addSong(song);
+  PlaybackController.onSongFavorited = (song) => ref.read(favoriteSongsProvider.notifier).addSong(song);
+  PlaybackController.onSongUnfavorited = (song) => ref.read(favoriteSongsProvider.notifier).removeSong(song);
+  PlaybackController.onSongPlayed = (song) => ref.read(playHistoryProvider.notifier).addEntry(song);
+  ref.onDispose(() {
+    PlaybackController.onSongDownloaded = null;
+    PlaybackController.onSongFavorited = null;
+    PlaybackController.onSongUnfavorited = null;
+    PlaybackController.onSongPlayed = null;
+  });
+  return controller;
 });
 
 /// Convenience: watch only the current song.
 final currentSongProvider = Provider<MusicJsonEntry?>((ref) {
   return ref.watch(playbackControllerProvider).currentSong;
 });
+
+// ── Downloads Provider ──
+
+class DownloadedSongsNotifier extends StateNotifier<List<MusicJsonEntry>> {
+  DownloadedSongsNotifier() : super([]);
+  void addSong(MusicJsonEntry song) { if (!state.any((s) => s.url == song.url)) state = [...state, song]; }
+  void removeSong(MusicJsonEntry song) { state = state.where((s) => s.url != song.url).toList(); }
+  void clearAll() => state = [];
+  bool isDownloaded(MusicJsonEntry song) => state.any((s) => s.url == song.url);
+}
+final downloadedSongsProvider = StateNotifierProvider<DownloadedSongsNotifier, List<MusicJsonEntry>>((ref) => DownloadedSongsNotifier());
+
+// ── Favorites Provider ──
+
+class FavoriteSongsNotifier extends StateNotifier<List<MusicJsonEntry>> {
+  FavoriteSongsNotifier() : super([]);
+  void addSong(MusicJsonEntry song) { if (!state.any((s) => s.url == song.url)) state = [...state, song]; }
+  void removeSong(MusicJsonEntry song) { state = state.where((s) => s.url != song.url).toList(); }
+}
+final favoriteSongsProvider = StateNotifierProvider<FavoriteSongsNotifier, List<MusicJsonEntry>>((ref) => FavoriteSongsNotifier());
+
+// ── History Provider ──
+
+class HistoryEntry {
+  final MusicJsonEntry song;
+  final DateTime playedAt;
+  const HistoryEntry({required this.song, required this.playedAt});
+}
+
+class PlayHistoryNotifier extends StateNotifier<List<HistoryEntry>> {
+  PlayHistoryNotifier() : super([]);
+  void addEntry(MusicJsonEntry song) {
+    state = [HistoryEntry(song: song, playedAt: DateTime.now()), ...state];
+    if (state.length > 100) state = state.sublist(0, 100);
+  }
+  void clearAll() => state = [];
+}
+final playHistoryProvider = StateNotifierProvider<PlayHistoryNotifier, List<HistoryEntry>>((ref) => PlayHistoryNotifier());
+

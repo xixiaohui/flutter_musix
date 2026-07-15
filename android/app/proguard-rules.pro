@@ -5,6 +5,7 @@
 -keep class io.flutter.view.** { *; }
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
+-dontwarn io.flutter.embedding.engine.deferredcomponents.**
 
 # ── just_audio ──
 -keep class com.ryanheise.just_audio.** { *; }
@@ -35,6 +36,10 @@
 -keep class * implements com.google.gson.TypeAdapterFactory
 -keep class * implements com.google.gson.JsonSerializer
 -keep class * implements com.google.gson.JsonDeserializer
+
+# ── Play Core (deferred components — not used, ignore) ──
+-dontwarn com.google.android.play.core.**
+-keep class com.google.android.play.core.** { *; }
 
 # ── General ──
 -keepattributes SourceFile,LineNumberTable

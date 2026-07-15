@@ -93,3 +93,10 @@ final musicRepositoryProvider = Provider<MusicRepository>((ref) {
     ref.watch(databaseProvider),
   );
 });
+
+/// Total songs count from the music data source.
+final totalSongCountProvider = FutureProvider<int>((ref) async {
+  final repo = ref.watch(musicRepositoryProvider);
+  final data = await repo.getOnlineMusic();
+  return data.length;
+});

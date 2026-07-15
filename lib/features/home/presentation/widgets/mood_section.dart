@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class MoodSection extends StatelessWidget {
   const MoodSection({super.key, required this.moods});
@@ -22,41 +24,25 @@ class MoodSection extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-          child: Text(
-            'Mood',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          child: Text('Mood', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 12,
+          child: Wrap(spacing: 12, runSpacing: 12,
             children: moods.map((mood) {
               return SizedBox(
                 width: 100,
                 child: Card(
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
-                    onTap: () {},
+                    onTap: () => context.go('/search'),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Icon(
-                            icons[mood] ?? Icons.mood,
-                            size: 32,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            mood,
-                            style: theme.textTheme.labelMedium,
-                          ),
-                        ],
-                      ),
+                      child: Column(children: [
+                        Icon(icons[mood] ?? Icons.mood, size: 32, color: theme.colorScheme.primary),
+                        const SizedBox(height: 8),
+                        Text(mood, style: theme.textTheme.labelMedium),
+                      ]),
                     ),
                   ),
                 ),

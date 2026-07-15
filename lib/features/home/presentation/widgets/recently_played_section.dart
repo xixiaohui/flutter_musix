@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/album_art_helper.dart';
 import '../../../../data/datasources/remote/music_json_data_source.dart';
 
 class RecentlyPlayedSection extends StatelessWidget {
@@ -17,8 +18,7 @@ class RecentlyPlayedSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
           child: Text('Recently Played', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
         ),
-        SizedBox(
-          height: 80,
+        SizedBox(height: 80,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -28,23 +28,24 @@ class RecentlyPlayedSection extends StatelessWidget {
               final entry = entries[index];
               return GestureDetector(
                 onTap: () => onPlay?.call(entry, entries, index),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 56, height: 56,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(colors: [theme.colorScheme.primaryContainer, theme.colorScheme.tertiaryContainer]),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  ClipOval(
+                    child: Image.network(
+                      AlbumArtHelper.songCover(entry.title, entry.author, w: 112, h: 112),
+                      width: 56, height: 56, fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 56, height: 56,
+                        decoration: BoxDecoration(shape: BoxShape.circle,
+                          gradient: LinearGradient(colors: [theme.colorScheme.primaryContainer, theme.colorScheme.tertiaryContainer])),
+                        child: const Icon(Icons.music_note, size: 24),
                       ),
-                      child: const Icon(Icons.music_note, size: 24),
                     ),
-                    const SizedBox(height: 4),
-                    SizedBox(width: 64,
-                      child: Text(entry.title, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
-                        style: theme.textTheme.labelSmall)),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 4),
+                  SizedBox(width: 64,
+                    child: Text(entry.title, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+                      style: theme.textTheme.labelSmall)),
+                ]),
               );
             },
           ),

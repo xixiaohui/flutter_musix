@@ -72,7 +72,7 @@ class LibraryPage extends ConsumerWidget {
               title: Text(s.title, maxLines: 1, overflow: TextOverflow.ellipsis),
               subtitle: Text(s.author, maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: const Icon(Icons.more_horiz),
-              onTap: () => controller.playList(state.songs, startIndex: i),
+              onTap: () => controller.playSong(state.songs[i], allSongs: state.songs),
             );
           },
         );

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/widgets/cover_art.dart';
 import '../../../../common/widgets/empty_view.dart';
-import '../../../../data/datasources/remote/music_json_data_source.dart';
-import '../../../../repositories/music_repository.dart';
+import '../../../../core/utils/album_art_helper.dart';
 import '../../../player/presentation/providers/playback_state_provider.dart';
 
 class HistoryPage extends ConsumerWidget {
@@ -12,49 +12,47 @@ class HistoryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final repo = ref.watch(musicRepositoryProvider);
+    final history = ref.watch(playHistoryProvider);
     final controller = ref.read(playbackControllerProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
         title: Text('History', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-        actions: [IconButton(icon: const Icon(Icons.delete_outline), onPressed: () {})],
+        actions: [
+          if (history.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_sweep),
+              onPressed: () => ref.read(playHistoryProvider.notifier).clearAll(),
+            ),
+        ],
       ),
-      body: FutureBuilder<List<MusicJsonEntry>>(
-        future: repo.getOnlineMusic(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-          final entries = snapshot.data!.take(15).toList();
-          if (entries.isEmpty) return const AppEmptyView(title: 'No listening history', subtitle: 'Start playing music');
-          return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 128),
-            itemCount: entries.length,
-            itemBuilder: (_, i) {
-              final e = entries[i];
-              final fakeTime = DateTime.now().subtract(Duration(hours: i * 3 + i));
-              return ListTile(
-                leading: Container(
-                  width: 48, height: 48,
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(8),
-                    gradient: LinearGradient(colors: [theme.colorScheme.primaryContainer, theme.colorScheme.tertiaryContainer])),
-                  child: const Icon(Icons.music_note, size: 24),
-                ),
-                title: Text(e.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: Text('${e.author} • ${_fmtTime(fakeTime)}'),
-                trailing: const Icon(Icons.more_horiz),
-                onTap: () => controller.playList(entries, startIndex: i),
-              );
-            },
-          );
-        },
-      ),
+      body: history.isEmpty
+          ? const AppEmptyView(title: 'No listening history', subtitle: 'Start playing music to build your history')
+          : ListView.builder(
+              padding: const EdgeInsets.only(bottom: 128),
+              itemCount: history.length,
+              itemBuilder: (_, i) {
+                final entry = history[i];
+                final s = entry.song;
+                return ListTile(
+                  leading: CoverArt(size: 48, borderRadius: 8,
+                    fallbackSeed: AlbumArtHelper.songCover(s.title, s.author)),
+                  title: Text(s.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text('${s.author} • ${_fmtTime(entry.playedAt)}'),
+                  trailing: const Icon(Icons.more_horiz),
+                  onTap: () => controller.playSong(s, allSongs: history.map((e) => e.song).toList()),
+                );
+              },
+            ),
     );
   }
 
   String _fmtTime(DateTime time) {
     final diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 1) return 'Just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${time.month}/${time.day}/${time.year}';
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/widgets/cover_art.dart';
+import '../../../../core/utils/album_art_helper.dart';
 import '../../../../data/datasources/remote/music_json_data_source.dart';
 
 class TrendingSection extends StatelessWidget {
@@ -20,14 +22,8 @@ class TrendingSection extends StatelessWidget {
         ...entries.take(5).toList().asMap().entries.map((e) {
           final idx = e.key; final entry = e.value;
           return ListTile(
-            leading: Container(
-              width: 48, height: 48,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                gradient: LinearGradient(colors: [theme.colorScheme.primaryContainer, theme.colorScheme.tertiaryContainer]),
-              ),
-              child: const Icon(Icons.music_note, size: 24),
-            ),
+            leading: CoverArt(size: 48, borderRadius: 8,
+              fallbackSeed: AlbumArtHelper.songCover(entry.title, entry.author)),
             title: Text(entry.title, maxLines: 1, overflow: TextOverflow.ellipsis),
             subtitle: Text(entry.author, maxLines: 1, overflow: TextOverflow.ellipsis),
             trailing: const Icon(Icons.more_horiz),

@@ -18,6 +18,7 @@ import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/visualizer/presentation/pages/visualizer_page.dart';
 import 'app_shell.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -63,6 +64,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Queue
       GoRoute(path: '/queue', name: 'queue', builder: (_, __) => const QueuePage()),
+
+      // Visualizer (full-screen immersive — scale+fade for cinematic feel)
+      GoRoute(path: '/visualizer', name: 'visualizer',
+        pageBuilder: (_, state) => CustomTransitionPage(
+          key: state.pageKey, fullscreenDialog: true,
+          transitionDuration: const Duration(milliseconds: 500),
+          reverseTransitionDuration: const Duration(milliseconds: 350),
+          transitionsBuilder: (_, animation, __, child) {
+            final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+            return FadeTransition(
+              opacity: curved,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.95, end: 1.0).animate(curved),
+                child: child,
+              ),
+            );
+          },
+          child: const VisualizerPage(),
+        ),
+      ),
 
       // Full-screen Overlays
       GoRoute(
