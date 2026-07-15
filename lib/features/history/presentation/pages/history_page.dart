@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../common/widgets/empty_view.dart';
 import '../../../../data/datasources/remote/music_json_data_source.dart';
 import '../../../../repositories/music_repository.dart';
+import '../../../player/presentation/providers/playback_state_provider.dart';
 
 class HistoryPage extends ConsumerWidget {
   const HistoryPage({super.key});
@@ -12,25 +12,26 @@ class HistoryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final musicData = ref.watch(musicRepositoryProvider);
-    // For now, display sample history from music data
+    final repo = ref.watch(musicRepositoryProvider);
+    final controller = ref.read(playbackControllerProvider.notifier);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('History', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
         actions: [IconButton(icon: const Icon(Icons.delete_outline), onPressed: () {})],
       ),
       body: FutureBuilder<List<MusicJsonEntry>>(
-        future: musicData.getOnlineMusic(),
+        future: repo.getOnlineMusic(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
           final entries = snapshot.data!.take(15).toList();
-          if (entries.isEmpty) return const AppEmptyView(title: 'No listening history', subtitle: 'Start playing music to see your history here');
+          if (entries.isEmpty) return const AppEmptyView(title: 'No listening history', subtitle: 'Start playing music');
           return ListView.builder(
             padding: const EdgeInsets.only(bottom: 128),
             itemCount: entries.length,
-            itemBuilder: (context, index) {
-              final entry = entries[index];
-              final fakeTime = DateTime.now().subtract(Duration(hours: index * 3 + index));
+            itemBuilder: (_, i) {
+              final e = entries[i];
+              final fakeTime = DateTime.now().subtract(Duration(hours: i * 3 + i));
               return ListTile(
                 leading: Container(
                   width: 48, height: 48,
@@ -38,10 +39,10 @@ class HistoryPage extends ConsumerWidget {
                     gradient: LinearGradient(colors: [theme.colorScheme.primaryContainer, theme.colorScheme.tertiaryContainer])),
                   child: const Icon(Icons.music_note, size: 24),
                 ),
-                title: Text(entry.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: Text('${entry.author} • ${_formatTime(fakeTime)}'),
+                title: Text(e.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: Text('${e.author} • ${_fmtTime(fakeTime)}'),
                 trailing: const Icon(Icons.more_horiz),
-                onTap: () => context.push('/now-playing'),
+                onTap: () => controller.playList(entries, startIndex: i),
               );
             },
           );
@@ -50,9 +51,8 @@ class HistoryPage extends ConsumerWidget {
     );
   }
 
-  String _formatTime(DateTime time) {
-    final now = DateTime.now();
-    final diff = now.difference(time);
+  String _fmtTime(DateTime time) {
+    final diff = DateTime.now().difference(time);
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     return '${diff.inDays}d ago';

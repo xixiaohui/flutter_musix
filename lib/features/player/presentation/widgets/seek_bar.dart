@@ -3,28 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/playback_state_provider.dart';
 
-/// A seekable progress bar with buffer display and time labels.
 class SeekBar extends ConsumerWidget {
   const SeekBar({super.key});
 
-  String _formatDuration(Duration d) {
-    final minutes = d.inMinutes;
-    final seconds = d.inSeconds % 60;
-    return '${minutes.toString().padLeft(1, '0')}:${seconds.toString().padLeft(2, '0')}';
+  String _fmt(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final position = ref.watch(
-      playbackStateProvider.select((s) => s.position),
-    );
-    final duration = ref.watch(
-      playbackStateProvider.select((s) => s.duration),
-    );
-    final progress = ref.watch(
-      playbackStateProvider.select((s) => s.progress),
-    );
+    final state = ref.watch(playbackControllerProvider);
+    final controller = ref.read(playbackControllerProvider.notifier);
+
     return Column(
       children: [
         SliderTheme(
@@ -37,14 +30,18 @@ class SeekBar extends ConsumerWidget {
             thumbColor: theme.colorScheme.primary,
           ),
           child: Slider(
-            value: progress.clamp(0.0, 1.0),
+            value: state.progress.clamp(0.0, 1.0),
             onChanged: (value) {
-              final newPosition = Duration(
-                milliseconds: (value * duration.inMilliseconds).round(),
+              final pos = Duration(
+                milliseconds: (value * state.duration.inMilliseconds).round(),
               );
-              ref
-                  .read(playbackStateProvider.notifier)
-                  .updatePosition(newPosition, duration);
+              controller.seek(pos);
+            },
+            onChangeEnd: (value) {
+              final pos = Duration(
+                milliseconds: (value * state.duration.inMilliseconds).round(),
+              );
+              controller.seek(pos);
             },
           ),
         ),
@@ -53,14 +50,10 @@ class SeekBar extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                _formatDuration(position),
-                style: theme.textTheme.labelSmall,
-              ),
-              Text(
-                '-${_formatDuration(duration - position)}',
-                style: theme.textTheme.labelSmall,
-              ),
+              Text(_fmt(state.position), style: theme.textTheme.labelSmall),
+              Text(state.duration.inMilliseconds > 0
+                  ? '-${_fmt(state.duration - state.position)}'
+                  : '--:--', style: theme.textTheme.labelSmall),
             ],
           ),
         ),

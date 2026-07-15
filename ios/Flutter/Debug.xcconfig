@@ -1,1 +1,25 @@
 #include "Generated.xcconfig"
+
+// ── Debug Configuration ──
+
+// Faster builds
+GCC_OPTIMIZATION_LEVEL = 0
+SWIFT_OPTIMIZATION_LEVEL = -Onone
+SWIFT_COMPILATION_MODE = singlefile
+
+// Debug symbols
+DEBUG_INFORMATION_FORMAT = dwarf
+
+// Enable assertions
+ENABLE_NS_ASSERTIONS = YES
+
+// Deployment
+IPHONEOS_DEPLOYMENT_TARGET = 14.0
+ENABLE_BITCODE = NO
+
+// Metal API validation (debug only)
+METAL_ENABLE_DEBUG_INFO = YES
+
+// Disable code stripping in debug
+STRIP_INSTALLED_PRODUCT = NO
+DEAD_CODE_STRIPPING = NO

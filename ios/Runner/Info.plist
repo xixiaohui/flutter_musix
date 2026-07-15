@@ -2,20 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- ── Performance ── -->
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
+	<!-- ── Bundle Info ── -->
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Musix</string>
+	<string>Melodify</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>com.xxh.melodify</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>musix</string>
+	<string>Melodify</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -26,6 +29,26 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
+	<!-- ── Background Audio ── -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+
+	<!-- ── Audio Session ── -->
+	<key>NSCameraUsageDescription</key>
+	<string>Musix does not use the camera.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Musix needs microphone access for audio visualization.</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Musix accesses Apple Music to enhance your music experience.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Musix uses the local network to discover casting devices.</string>
+
+	<!-- ── Scene Manifest ── -->
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -49,10 +72,14 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- ── Launch Screen ── -->
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+
+	<!-- ── Orientation ── -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -66,5 +93,43 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<!-- ── Status Bar ── -->
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+
+	<!-- ── File Sharing ── -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+
+	<!-- ── URL Schemes (Deep Links) ── -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.xxh.melodify</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>melodify</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- ── CarPlay (reserved) ── -->
+	<key>UIApplicationSupportsCarPlay</key>
+	<true/>
+
+	<!-- ── Thermal State ── -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

@@ -93,7 +93,7 @@ class SettingsPage extends ConsumerWidget {
           _SectionHeader(title: 'About'),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('About Musix'),
+            title: const Text('About Melodify'),
             subtitle: const Text('Version 1.0.0'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {},

@@ -6,8 +6,8 @@ import 'common/theme/theme.dart';
 import 'common/router/app_router.dart';
 
 /// The root widget of Musix.
-class MusixApp extends ConsumerWidget {
-  const MusixApp({super.key});
+class MelodifyApp extends ConsumerWidget {
+  const MelodifyApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -18,7 +18,7 @@ class MusixApp extends ConsumerWidget {
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
         return MaterialApp.router(
-          title: 'Musix',
+          title: 'Melodify',
           debugShowCheckedModeBanner: false,
 
           // Theme

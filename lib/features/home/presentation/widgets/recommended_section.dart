@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../data/datasources/remote/music_json_data_source.dart';
 
 class RecommendedSection extends StatelessWidget {
-  const RecommendedSection({super.key, required this.entries});
+  const RecommendedSection({super.key, required this.entries, this.onPlay});
   final List<MusicJsonEntry> entries;
+  final void Function(MusicJsonEntry song, List<MusicJsonEntry> all, int index)? onPlay;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -19,12 +18,7 @@ class RecommendedSection extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Recommended For You',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Text('Recommended For You', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
               TextButton(onPressed: () {}, child: const Text('See All')),
             ],
           ),
@@ -39,7 +33,7 @@ class RecommendedSection extends StatelessWidget {
             itemBuilder: (context, index) {
               final entry = entries[index];
               return GestureDetector(
-                onTap: () => context.push('/now-playing'),
+                onTap: () => onPlay?.call(entry, entries, index),
                 child: SizedBox(
                   width: 140,
                   child: Column(
@@ -49,32 +43,14 @@ class RecommendedSection extends StatelessWidget {
                         height: 140,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primaryContainer,
-                              theme.colorScheme.tertiaryContainer,
-                            ],
-                          ),
+                          gradient: LinearGradient(colors: [theme.colorScheme.primaryContainer, theme.colorScheme.tertiaryContainer]),
                         ),
-                        child: const Center(
-                          child: Icon(Icons.music_note, size: 40),
-                        ),
+                        child: const Center(child: Icon(Icons.music_note, size: 40)),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        entry.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelLarge,
-                      ),
-                      Text(
-                        entry.author,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+                      Text(entry.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.labelLarge),
+                      Text(entry.author, maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                     ],
                   ),
                 ),

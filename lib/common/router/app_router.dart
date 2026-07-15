@@ -12,6 +12,7 @@ import '../../features/library/presentation/pages/library_page.dart';
 import '../../features/local_music/presentation/pages/local_music_page.dart';
 import '../../features/lyrics/presentation/pages/lyrics_page.dart';
 import '../../features/player/presentation/pages/now_playing_page.dart';
+import '../../features/player/presentation/pages/queue_page.dart';
 import '../../features/playlist/presentation/pages/playlist_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
@@ -59,6 +60,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/history', name: 'history', builder: (_, __) => const HistoryPage()),
       GoRoute(path: '/download', name: 'download', builder: (_, __) => const DownloadPage()),
       GoRoute(path: '/local-music', name: 'localMusic', builder: (_, __) => const LocalMusicPage()),
+
+      // Queue
+      GoRoute(path: '/queue', name: 'queue', builder: (_, __) => const QueuePage()),
 
       // Full-screen Overlays
       GoRoute(

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- App Store Distribution -->
+	<key>method</key>
+	<string>app-store</string>
+
+	<!-- Stripping Swift symbols -->
+	<key>stripSwiftSymbols</key>
+	<true/>
+
+	<!-- Upload App Store symbols -->
+	<key>uploadSymbols</key>
+	<true/>
+
+	<!-- Manage signing automatically -->
+	<key>manageAppVersionAndBuildNumber</key>
+	<true/>
+
+	<!-- Generate App Store Connect API key -->
+	<key>generateAppStoreInformation</key>
+	<true/>
+
+	<!-- Bitcode is no longer required by Apple -->
+	<key>uploadBitcode</key>
+	<false/>
+
+	<!-- Compile and upload bitcode symbols (debug info) -->
+	<key>compileBitcode</key>
+	<false/>
+</dict>
+</plist>

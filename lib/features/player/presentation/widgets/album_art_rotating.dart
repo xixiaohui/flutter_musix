@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/playback_state_provider.dart';
 
-/// A rotating album art that spins during playback.
 class AlbumArtRotating extends ConsumerStatefulWidget {
   const AlbumArtRotating({super.key});
 
@@ -13,12 +12,12 @@ class AlbumArtRotating extends ConsumerStatefulWidget {
 
 class _AlbumArtRotatingState extends ConsumerState<AlbumArtRotating>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+  late final AnimationController _anim;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _anim = AnimationController(
       duration: const Duration(seconds: 20),
       vsync: this,
     );
@@ -26,34 +25,29 @@ class _AlbumArtRotatingState extends ConsumerState<AlbumArtRotating>
 
   @override
   void dispose() {
-    _controller.dispose();
+    _anim.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final playing = ref.watch(
-      playbackStateProvider.select((s) => s.isPlaying),
-    );
+    final isPlaying = ref.watch(playbackControllerProvider).isPlaying;
 
-    // Control rotation based on playback state
-    if (playing) {
-      _controller.repeat();
+    if (isPlaying) {
+      if (!_anim.isAnimating) _anim.repeat();
     } else {
-      _controller.stop();
+      _anim.stop();
     }
 
     return AspectRatio(
       aspectRatio: 1,
       child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Transform.rotate(
-            angle: _controller.value * 3.14159 * 2,
-            child: child,
-          );
-        },
+        animation: _anim,
+        builder: (context, child) => Transform.rotate(
+          angle: _anim.value * 3.14159 * 2,
+          child: child,
+        ),
         child: Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -67,8 +61,7 @@ class _AlbumArtRotatingState extends ConsumerState<AlbumArtRotating>
             boxShadow: [
               BoxShadow(
                 color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                blurRadius: 60,
-                spreadRadius: 8,
+                blurRadius: 60, spreadRadius: 8,
               ),
             ],
           ),
@@ -80,11 +73,8 @@ class _AlbumArtRotatingState extends ConsumerState<AlbumArtRotating>
                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
               ),
               child: Center(
-                child: Icon(
-                  Icons.music_note_rounded,
-                  size: 80,
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
+                child: Icon(Icons.music_note_rounded, size: 80,
+                  color: theme.colorScheme.onPrimaryContainer),
               ),
             ),
           ),

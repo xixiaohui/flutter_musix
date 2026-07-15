@@ -1,1 +1,37 @@
 #include "Generated.xcconfig"
+
+// ── Release Optimization Flags ──
+
+// Code Signing (set your team ID here or via environment)
+// DEVELOPMENT_TEAM = YOUR_TEAM_ID
+
+// Strip Swift symbols
+SWIFT_STRIP_SWIFT_SYMBOLS = YES
+
+// Strip debug symbols
+STRIP_INSTALLED_PRODUCT = YES
+STRIP_STYLE = all
+COPY_PHASE_STRIP = YES
+
+// Dead code stripping
+DEAD_CODE_STRIPPING = YES
+
+// Optimization
+GCC_OPTIMIZATION_LEVEL = s
+SWIFT_OPTIMIZATION_LEVEL = -O
+SWIFT_COMPILATION_MODE = wholemodule
+
+// Debug info
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+
+// Deployment
+IPHONEOS_DEPLOYMENT_TARGET = 14.0
+
+// Bitcode (not required since Xcode 14)
+ENABLE_BITCODE = NO
+
+// Asset catalog compression
+ASSETCATALOG_COMPILER_OPTIMIZATION = space
+
+// Validate product
+VALIDATE_PRODUCT = YES

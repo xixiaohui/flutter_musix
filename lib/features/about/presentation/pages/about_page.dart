@@ -25,7 +25,7 @@ class AboutPage extends StatelessWidget {
                 child: Icon(Icons.music_note_rounded, size: 48, color: theme.colorScheme.onPrimary),
               ),
               const SizedBox(height: 24),
-              Text('Musix', style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700)),
+              Text('Melodify', style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 4),
               Text('Feel Every Beat.', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
               const SizedBox(height: 32),

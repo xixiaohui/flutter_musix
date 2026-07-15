@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 /// The splash screen shown on app launch.
 ///
-/// Displays the Musix brand logo with entrance animations
+/// Displays the Melodify brand logo with entrance animations
 /// and navigates to /home after a short delay.
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -114,7 +114,7 @@ class _SplashPageState extends State<SplashPage>
               const SizedBox(height: 32),
               // App Name
               Text(
-                'Musix',
+                'Melodify',
                 style: theme.textTheme.displayMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSurface,

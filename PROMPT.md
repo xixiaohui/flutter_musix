@@ -40,7 +40,7 @@ Spotify + Apple Music + 汽水音乐 风格
 
 # 产品名称
 
-Musix
+Melodify
 
 Slogan：
 

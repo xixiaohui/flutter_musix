@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────
+# Musix App Icon Configuration
+# Run: dart run flutter_launcher_icons
+# ─────────────────────────────────────────────
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png"
+
+  # Android Adaptive Icon
+  adaptive_icon_background: "#121212"
+  adaptive_icon_foreground: "assets/logo.png"
+
+  # iOS — remove transparency, use solid background
+  remove_alpha_ios: true
+  ios_background: "#121212"
+
+  # Web (PWA icons)
+  web:
+    generate: true
+    image_path: "assets/logo.png"
+    background_color: "#121212"
+    theme_color: "#6750A4"
+
+  # Windows (optional)
+  windows:
+    generate: true
+    image_path: "assets/logo.png"
+    icon_size: 48

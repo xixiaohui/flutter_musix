@@ -1,12 +1,17 @@
 {
-    "name": "musix",
-    "short_name": "musix",
+    "name": "Melodify — Feel Every Beat",
+    "short_name": "Melodify",
+    "description": "A modern music player with local and online streaming support, lyrics, equalizer, and beautiful Material You design.",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#121212",
+    "theme_color": "#6750A4",
+    "orientation": "any",
+    "categories": [
+        "music",
+        "entertainment"
+    ],
+    "lang": "en",
     "prefer_related_applications": false,
     "icons": [
         {

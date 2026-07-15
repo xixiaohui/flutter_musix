@@ -7,14 +7,14 @@ import '../widgets/album_art_rotating.dart';
 import '../widgets/playback_controls.dart';
 import '../widgets/seek_bar.dart';
 
-/// Full-screen immersive now-playing experience.
 class NowPlayingPage extends ConsumerWidget {
   const NowPlayingPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final playback = ref.watch(playbackStateProvider);
+    final state = ref.watch(playbackControllerProvider);
+    final controller = ref.read(playbackControllerProvider.notifier);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -25,22 +25,15 @@ class NowPlayingPage extends ConsumerWidget {
           icon: const Icon(Icons.keyboard_arrow_down),
           onPressed: () => context.pop(),
         ),
-        title: Column(
-          children: [
-            Text(
-              'Playing from Musix',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+        title: Text(
+          'Playing from Melodify',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.more_horiz),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.more_horiz), onPressed: () {}),
         ],
       ),
       body: Container(
@@ -59,13 +52,11 @@ class NowPlayingPage extends ConsumerWidget {
           child: Column(
             children: [
               const Spacer(flex: 1),
-
               // Album Art
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 48),
                 child: AlbumArtRotating(),
               ),
-
               const Spacer(flex: 1),
 
               // Song Info
@@ -74,44 +65,43 @@ class NowPlayingPage extends ConsumerWidget {
                 child: Column(
                   children: [
                     Text(
-                      playback.currentTitle,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      state.currentTitle,
+                      style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      playback.currentArtist,
+                      state.currentArtist,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                        color: theme.colorScheme.onSurfaceVariant),
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
 
+              // Error display
+              if (state.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Text(state.errorMessage!,
+                    style: TextStyle(color: theme.colorScheme.error)),
+                ),
+
               const SizedBox(height: 16),
 
-              // Like / Favorite
+              // Like
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
                     icon: Icon(
-                      playback.isFavorite
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      color: playback.isFavorite
+                      state.isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: state.isFavorite
                           ? theme.colorScheme.error
                           : theme.colorScheme.onSurfaceVariant,
                     ),
-                    onPressed: () {
-                      ref.read(playbackStateProvider.notifier).toggleFavorite();
-                    },
+                    onPressed: () => controller.toggleFavorite(),
                   ),
                 ],
               ),
@@ -138,30 +128,12 @@ class NowPlayingPage extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     IconButton(
-                      icon: Icon(
-                        Icons.shuffle,
-                        color: playback.isShuffled
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      onPressed: () {
-                        ref
-                            .read(playbackStateProvider.notifier)
-                            .toggleShuffle();
-                      },
+                      icon: Icon(Icons.shuffle, color: state.isShuffled ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
+                      onPressed: () => controller.toggleShuffle(),
                     ),
                     IconButton(
-                      icon: Icon(
-                        playback.repeatIcon,
-                        color: playback.isRepeating
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      onPressed: () {
-                        ref
-                            .read(playbackStateProvider.notifier)
-                            .toggleRepeat();
-                      },
+                      icon: Icon(state.repeatIcon, color: state.isRepeating ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
+                      onPressed: () => controller.toggleRepeat(),
                     ),
                     IconButton(
                       icon: const Icon(Icons.lyrics_outlined),
@@ -173,7 +145,7 @@ class NowPlayingPage extends ConsumerWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.speed),
-                      onPressed: () {},
+                      onPressed: () => _showSpeedDialog(context, controller, state.speed),
                     ),
                   ],
                 ),
@@ -183,6 +155,45 @@ class NowPlayingPage extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showSpeedDialog(BuildContext context, PlaybackController controller, double current) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Playback Speed'),
+        content: StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('${current.toStringAsFixed(2)}x',
+                  style: Theme.of(context).textTheme.headlineMedium),
+                Slider(
+                  value: current,
+                  min: 0.5, max: 2.0,
+                  divisions: 6,
+                  label: '${current.toStringAsFixed(2)}x',
+                  onChanged: (v) {
+                    setDialogState(() => current = v);
+                    controller.setSpeed(v);
+                  },
+                ),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              controller.setSpeed(1.0);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Reset'),
+          ),
+        ],
       ),
     );
   }

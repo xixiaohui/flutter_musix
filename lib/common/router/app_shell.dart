@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// The main app shell containing the bottom navigation bar
-/// and the mini player placeholder.
+import '../../widgets/mini_player/mini_player.dart';
+
+/// The main app shell containing the bottom navigation bar and mini player.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.navigationShell});
 
@@ -13,16 +14,16 @@ class AppShell extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Main content area
+          // Main content
           navigationShell,
 
-          // Mini Player placeholder (will be implemented in Phase 3)
-          // Positioned(
-          //   left: 0,
-          //   right: 0,
-          //   bottom: 64,
-          //   child: MiniPlayer(),
-          // ),
+          // Mini Player — floats above bottom nav
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 64,
+            child: MiniPlayer(),
+          ),
         ],
       ),
       bottomNavigationBar: NavigationBar(
